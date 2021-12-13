@@ -1,65 +1,45 @@
-from collections import Counter
-
 input_file = open('input.txt', mode='r')
-cave_map = [i.split('-') for i in input_file.read().splitlines()]
+cave_system = [i.split('-') for i in input_file.read().splitlines()]
+cave_map = {j: [] for i in cave_system for j in i}
+for road in cave_system:
+    cave_map[road[0]].append(road[1])
+    cave_map[road[1]].append(road[0])
 
 
-def part1():
+def execute(part):
     paths = [['start']]
     answer = []
 
-    while len(paths) > 0:
-        path = paths.pop()
-        last_cave = path[len(path) - 1]
-        next_paths = [i for i in cave_map if last_cave in i]
-        for road in next_paths:
-            next_cave = [i for i in road if i != last_cave][0]
-            if next_cave == 'start':
-                continue
-            new_path = path.copy();
-            new_path.append(next_cave)
-
-            is_valid = True
-            small_caves = Counter([i for i in new_path if i != 'start' and i != 'end' and i.lower() == i])
-            if any([v > 1 for k, v in small_caves.items()]):
-                is_valid = False
-
-            if is_valid:
-                if next_cave == 'end':
-                    answer.append(new_path)
-                else:
-                    paths.append(new_path)
-
-    print("Part1", len(answer))
-
-
-def part2():
-    paths = [['start']]
-    answer = []
-
-    def validate_path(path):
-        small_caves = Counter([i for i in path if i != 'start' and i != 'end' and i.lower() == i])
-
-        if any([v > 2 for k, v in small_caves.items()]):
-            return False
-        else:
-            small_caves = Counter([v for _, v in small_caves.items()])
-            if small_caves[2] > 1:
+    def better_validate_path(path, new_value):
+        if new_value == 'end' or new_value[0].lower() != new_value[0]:
+            return True
+        path_set = {i for i in path if i[0].lower() == i[0] and i != 'start'}
+        if new_value not in path_set:
+            return True
+        if part == 1:
+            if new_value in path_set:
                 return False
-        return True
+        elif part == 2:
+            counts = [path.count(i) for i in path_set]
+            if 2 in counts:
+                return False
 
+        return True
+    processed_paths = 0
     while len(paths) > 0:
+        processed_paths += 1
         path = paths.pop()
         last_cave = path[len(path) - 1]
-        next_paths = [i for i in cave_map if last_cave in i]
-        for road in next_paths:
-            next_cave = [i for i in road if i != last_cave][0]
+        next_paths = cave_map[last_cave]
+        for next_cave in next_paths:
             if next_cave == 'start':
                 continue
-            new_path = path.copy();
-            new_path.append(next_cave)
 
-            is_valid = validate_path(new_path)
+            is_valid = better_validate_path(path, next_cave)
+            if not is_valid:
+                continue
+            new_path = path.copy()
+            new_path.append(next_cave)
 
             if is_valid:
                 if next_cave == 'end':
@@ -67,9 +47,10 @@ def part2():
                 else:
                     paths.append(new_path)
 
-            #print(paths)
-    print("Part2", len(answer))
+        #print(paths)
+    print("Part", part, len(answer))
+    print("Processed paths", processed_paths)
 
 
-part1()
-part2()
+execute(part=1)
+execute(part=2)
