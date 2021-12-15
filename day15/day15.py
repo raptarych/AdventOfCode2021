@@ -23,29 +23,28 @@ def search(game_map):
     end = (len(game_map[0])-1, len(game_map)-1)
 
     paths = PriorityQueue()
-    paths.put((0, [start]))
+    paths.put((0, start))
     cache = defaultdict(int)
     results = []
     complexity = 0
     while paths:
         complexity+=1
         (l, path) = paths.get()
-        (x, y) = path[-1]
+        (x, y) = path
 
         neighbours = [(x+dx, y+dy) for dx, dy in [(1, 0), (0, 1), (-1, 0), (0, -1)]]
-        neighbours = [(x, y) for x, y in neighbours if 0 <= x < len(game_map) and 0 <= y < len(game_map) and (x, y) not in path]
+        neighbours = [(x, y) for x, y in neighbours if 0 <= x < len(game_map) and 0 <= y < len(game_map)
+                      and ((x, y) not in cache or cache[(x, y)] > l)]
         for n in neighbours:
             new_l = l + game_map[n[1]][n[0]]
             if n not in cache or cache[n] > new_l:
                 cache[n] = new_l
                 if n == end:
                     results.append(new_l)
-                    #print_map(n, path, game_map)
+                    #print_map(n, cache.keys(), game_map)
                     print(new_l, "complexity", complexity)
                     return
-                new_path = path.copy()
-                new_path.append(n)
-                paths.put((new_l, new_path))
+                paths.put((new_l, n))
 
 
 def part1():
