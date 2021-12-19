@@ -1,9 +1,7 @@
 import math
 
 input_file = open('input.txt', mode='r')
-
 data = [eval(i) for i in input_file.readlines()]
-print(data)
 
 
 def is_regular(n):
@@ -14,9 +12,20 @@ def is_pair(n):
     return isinstance(n, list) and len(n) == 2 and all(map(is_regular, n))
 
 
+def magnitude(tree):
+    for i in range(1, len(tree)):
+        ((d1, n1), (d2, n2)) = tree[i - 1], tree[i]
+        if d1 == d2:
+            tree[i - 1] = (d1 - 1, n1 * 3 + n2 * 2)
+            del tree[i]
+            magnitude(tree)
+            break
+    return tree[0][1]
+
+
 def array_to_tree(n, depth=0):
     if is_regular(n):
-        return (depth, n)
+        return depth, n
     result = []
     for i in n:
         subtree = array_to_tree(i, depth+1)
@@ -80,15 +89,7 @@ def split_if_needed(tree):
     return True
 
 
-numbers = []
-for i in range(len(data)):
-    x = array_to_tree(data[i])
-    #print("Input ", x)
-    if not numbers:
-        numbers = [*[(d-1, n) for d, n in x]]
-    else:
-        numbers = [*[(d+1, n) for d, n in numbers], *x]
-
+def reduce(numbers):
     while True:
         if explode_if_needed(numbers):
             continue
@@ -96,11 +97,35 @@ for i in range(len(data)):
             continue
         break
 
-result = [i[1] for i in numbers]
 
-while len(result) > 1:
-    reduced_result = [result[i] * 3 + result[i+1] * 2 for i in range(0, len(result), 2)]
-    result = reduced_result
+def part1():
+    numbers = []
+    for i in range(len(data)):
+        x = array_to_tree(data[i])
+        if not numbers:
+            numbers = [*[(d-1, n) for d, n in x]]
+        else:
+            numbers = [*[(d+1, n) for d, n in numbers], *x]
+
+        reduce(numbers)
+
+    print("part1:", magnitude(numbers))
 
 
-print(result)
+def part2():
+    max_sum = 0
+    for i in data:
+        for j in data:
+            if i == j:
+                continue
+            x = array_to_tree(i)
+            numbers = [*[(d, n) for d, n in x], *array_to_tree(j)]
+            reduce(numbers)
+            m = magnitude(numbers)
+            if max_sum < m:
+                max_sum = m
+    print("part2:", max_sum)
+
+
+part1()
+part2()
